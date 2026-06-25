@@ -1,0 +1,19 @@
+# 编译产物
+build/**
+!build/.gitkeep
+
+lib/**
+!lib/.gitkeep
+
+bin/**
+!bin/.gitkeep
+
+test/**/*.out
+
+
+# 配置文件
+.clang-format
+test/**/.clangd
+
+# 日志文件
+**/*.log

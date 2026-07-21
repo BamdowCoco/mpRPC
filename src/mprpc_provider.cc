@@ -27,19 +27,17 @@ void RpcProvider::notifyService(google::protobuf::Service* service)
     // LOG("serviceName:"+serviceName);
     // LOG("serviceFullName:"+serviceFullName);
     
-    DEBUG_CODE(
-        // 获取服务对象 方法数量
-        int methodCount = serviceDescPtr->method_count();
-        LOG_INFO("methodCount: %d", methodCount);
-        // LOG("methodCount:"+std::to_string(methodCount));
-        for (int i=0; i<methodCount; i++) {
-            // 获取服务对象对应下标的服务方法描述信息
-            const google::protobuf::MethodDescriptor* methodDescPtr = serviceDescPtr->method(i);
-            std::string methodName(methodDescPtr->name());
-            LOG_INFO("methodName: %s", methodName.c_str());    
-            serviceInfo.m_methodMap.insert({methodName, methodDescPtr});
-        }
-    );
+    // 获取服务对象 方法数量
+    int methodCount = serviceDescPtr->method_count();
+    LOG_INFO("methodCount: %d", methodCount);
+    // LOG("methodCount:"+std::to_string(methodCount));
+    for (int i=0; i<methodCount; i++) {
+        // 获取服务对象对应下标的服务方法描述信息
+        const google::protobuf::MethodDescriptor* methodDescPtr = serviceDescPtr->method(i);
+        std::string methodName(methodDescPtr->name());
+        LOG_INFO("methodName: %s", methodName.c_str());    
+        serviceInfo.m_methodMap.insert({methodName, methodDescPtr});
+    }
 
     m_serviceInfoMap.insert({serviceName, serviceInfo});
     // m_serviceMap.insert({serviceName, service});

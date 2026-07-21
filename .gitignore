@@ -17,3 +17,8 @@ test/**/.clangd
 
 # 日志文件
 **/*.log
+
+# 其他
+.claude/
+docs/
+CLAUDE.md

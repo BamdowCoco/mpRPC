@@ -22,17 +22,17 @@ void execGetFriendListRpc(fixbug::FriendRpcService_Stub& stub)
     if(!controller.Failed()) {
         // rpc方法调用完成 成功接收解析得到rpc响应
         if(0 == response.result().errcode()) {
-            LOG("exec GetFriendList rpc success!");
+            LOG_INFO("exec GetFriendList rpc success!");
             for(int i=0;i<response.friend_list_size();i++) {
                 const fixbug::User& user = response.friend_list().at(i);
-                LOG("i:" + std::to_string(i) + " id:" + std::to_string(user.id()) + " name:" + user.name());
+                LOG_INFO("i:%d id:%d name:%s", i, user.id(), user.name().c_str());
             }        
         } else {
-            LOG("failed to exec GetFriendList rpc! errcode: " + std::to_string(response.result().errcode()) + " errmsg:" + response.result().errmsg());
+            LOG_ERROR("failed to exec GetFriendList rpc! errcode:%d errmsg:%s", response.result().errcode(), response.result().errmsg().c_str());
             
         }
     } else {
-        LOG(controller.ErrorText());
+        LOG_ERROR("%s",controller.ErrorText().c_str());
     }
     
 }

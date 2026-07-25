@@ -23,19 +23,16 @@ void RpcProvider::notifyService(google::protobuf::Service* service)
     std::string serviceName(serviceDescPtr->name());
     // std::string serviceFullName(serviceDescPtr->full_name());
     
-    LOG_INFO("serviceName: %s", serviceName.c_str());    
-    // LOG("serviceName:"+serviceName);
-    // LOG("serviceFullName:"+serviceFullName);
+    LOG_INFO("serviceName:%s", serviceName.c_str());    
     
     // 获取服务对象 方法数量
     int methodCount = serviceDescPtr->method_count();
-    LOG_INFO("methodCount: %d", methodCount);
-    // LOG("methodCount:"+std::to_string(methodCount));
+    LOG_INFO("methodCount:%d", methodCount);
     for (int i=0; i<methodCount; i++) {
         // 获取服务对象对应下标的服务方法描述信息
         const google::protobuf::MethodDescriptor* methodDescPtr = serviceDescPtr->method(i);
         std::string methodName(methodDescPtr->name());
-        LOG_INFO("methodName: %s", methodName.c_str());    
+        LOG_INFO("methodName:%s", methodName.c_str());    
         serviceInfo.m_methodMap.insert({methodName, methodDescPtr});
     }
 
@@ -62,7 +59,6 @@ void RpcProvider::run()
     server.setThreadNum(4);
 
     LOG_INFO("RpcProvider start service ip:%s port:%d", ip.c_str(), port);
-    // LOG("RpcProvider start service ip:" + ip + " port:" + std::to_string(port));
 
     // 把当前节点的服务和方法 注册到ZooKeeper上
     ZKClient zkClient;
@@ -145,7 +141,7 @@ void RpcProvider::onMessage(const muduo::net::TcpConnectionPtr& conn,
     mprpc::RpcHeader rpcHeader;
     if (!rpcHeader.ParseFromString(rpcHeaderStr)) {
         // 数据头反序列化失败
-        LOG("failed to parse from string to rpcHeader!");
+        LOG_ERROR("failed to parse from string to rpcHeader!");
         conn->shutdown();
         return;
     }
@@ -156,17 +152,17 @@ void RpcProvider::onMessage(const muduo::net::TcpConnectionPtr& conn,
     // 读取args
     std::string argsStr = recvBuf.substr(4+headerSize, argsSize);
 
-    LOG("headerSize:" + std::to_string(headerSize));
-    LOG("rpcHeaderStr:" + rpcHeaderStr);
-    LOG("serviceName:" + serviceName);
-    LOG("methodName:" + methodName);
-    LOG("argsSize" + std::to_string(argsSize));
-    LOG("argsStr:" + argsStr);
+    LOG_INFO("headerSize:%d", (headerSize));
+    // LOG_INFO("rpcHeaderStr:%s", rpcHeaderStr.c_str());
+    LOG_INFO("serviceName:%s", serviceName.c_str());
+    LOG_INFO("methodName:%s", methodName.c_str());
+    LOG_INFO("argsSize:%d", argsSize);
+    // LOG_INFO("argsStr:%s", argsStr.c_str());
     
     // 获取service对象和method对象
     auto serviceInfoIt = m_serviceInfoMap.find(serviceName);
     if(serviceInfoIt==m_serviceInfoMap.end()) {
-        LOG("failed to find service:" + serviceName + " in m_serviceInfoMap!");
+        LOG_ERROR("failed to find service:%s in m_serviceInfoMap!", serviceName.c_str());
         conn->shutdown();
         return;
     }
@@ -174,7 +170,7 @@ void RpcProvider::onMessage(const muduo::net::TcpConnectionPtr& conn,
     auto& methodMap = serviceInfoIt->second.m_methodMap;
     auto methodIt = methodMap.find(methodName);
     if(methodIt == methodMap.end()) {
-        LOG("failed to find method:" + methodName + " in methodMap!");
+        LOG_ERROR("failed to find method:%s in methodMap!", methodName.c_str());
         conn->shutdown();
         return;
     }
@@ -185,7 +181,7 @@ void RpcProvider::onMessage(const muduo::net::TcpConnectionPtr& conn,
     // 生成rpc远程过程调用的请求request和响应response
     google::protobuf::Message* request = service->GetRequestPrototype(method).New();
     if (!request->ParseFromString(argsStr)) {
-        LOG("failed to parse from string to request! content:" + argsStr);
+        LOG_ERROR("failed to parse from string to request! content:%s", argsStr.c_str());
         conn->shutdown();
         return;
     }
@@ -214,7 +210,7 @@ void RpcProvider::sendRpcResponse(const muduo::net::TcpConnectionPtr& conn, cons
     // rpc响应序列化
     std::string responseStr;
     if (!response->SerializeToString(&responseStr)) {
-        LOG("failed to serialize to string ! content:" + responseStr);
+        LOG_ERROR("failed to serialize to string ! content:%s", responseStr.c_str());
         conn->shutdown();
         return;
     }

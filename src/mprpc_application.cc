@@ -20,7 +20,7 @@ void MprpcApplication::init(int argc, char** argv)
     
     if(m_hasConfigured) {
         // 只需调用一次 防止多次调用
-        LOG("MprpcApplication has configured!");
+        LOG_INFO("MprpcApplication has configured!");
         return;
     }
 

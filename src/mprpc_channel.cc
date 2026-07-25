@@ -48,20 +48,11 @@ void MprpcChannel::CallMethod(const google::protobuf::MethodDescriptor* method,
     sendRpcStr.append(headerStr);
     sendRpcStr.append(argsStr);
 
-    LOG("headerSize:" + std::to_string(headerSize));
-    LOG("service_name:" + serviceName);
-    LOG("method_name:" + methodName);
-    LOG("headerStr:" + headerStr);
-    LOG("argsStr:" + argsStr);
-
-    // char buffer[1024] = {0};
-    // memcpy(buffer, &headerSize, sizeof(headerSize));
-    // char* p = buffer+sizeof(headerSize);
-    // snprintf(p, sizeof(buffer)-sizeof(headerSize), "%s%s", headerStr.c_str(), argsStr.c_str());
-    
-    // LOG("headerSize:" + std::to_string(headerSize));
-    // LOG("headerStr:" + std::string(headerStr.c_str()));
-    // LOG("buffer:" + std::string(buffer));
+    LOG_INFO("headerSize:%d", headerSize);
+    LOG_INFO("service_name:%s", serviceName.c_str());
+    LOG_INFO("method_name:%s", methodName.c_str());
+    // LOG_INFO("headerStr:%s", headerStr.c_str());
+    // LOG_INFO("argsStr:%s", argsStr.c_str());
 
 
     // TCP 发送rpc请求
@@ -69,7 +60,7 @@ void MprpcChannel::CallMethod(const google::protobuf::MethodDescriptor* method,
     int fd = socket(AF_INET, SOCK_STREAM, 0);
     if (-1 == fd) {
         std::string reason = "failed to create socket! errno: " + std::to_string(errno);
-        LOG(reason);
+        LOG_ERROR("%s", reason.c_str());
         controller->SetFailed(reason);
         return;
     }
@@ -120,7 +111,7 @@ void MprpcChannel::CallMethod(const google::protobuf::MethodDescriptor* method,
     } else {
         // 连接失败
         std::string reason = "failed to connect rpc server! errno: " + std::to_string(errno);
-        LOG(reason);
+        LOG_ERROR("%s", reason.c_str());
         controller->SetFailed(reason);
         close(fd);
         return;
@@ -128,7 +119,7 @@ void MprpcChannel::CallMethod(const google::protobuf::MethodDescriptor* method,
 
     if(0 >= send(fd, sendRpcStr.c_str(), sendRpcStr.size(), 0)) {
         std::string reason = "failed to send rpc request! errno: " + std::to_string(errno);
-        LOG(reason);
+        LOG_ERROR("%s", reason.c_str());
         controller->SetFailed(reason);
         close(fd);
         return;
@@ -140,7 +131,7 @@ void MprpcChannel::CallMethod(const google::protobuf::MethodDescriptor* method,
     if(0 >=(recvSize = recv(fd, responseBuf, sizeof(responseBuf), 0)))
     {
         std::string reason = "failed to receive rpc response! errno: " + std::to_string(errno);
-        LOG(reason);
+        LOG_ERROR("%s", reason.c_str());
         controller->SetFailed(reason);
         close(fd);
         return;
@@ -149,12 +140,12 @@ void MprpcChannel::CallMethod(const google::protobuf::MethodDescriptor* method,
     // 断开连接
     close(fd);
 
-    LOG("recvSize:" + std::to_string(recvSize));
+    LOG_INFO("recvSize:%d", recvSize);
     
     // rpc响应反序列化
     if(!response->ParseFromArray(responseBuf, recvSize)) {
         std::string reason = "failed to parseFromString rpc response! content:" + std::string(responseBuf, recvSize);
-        LOG(reason);
+        LOG_ERROR("%s", reason.c_str());
         controller->SetFailed(reason);
         return;
     }

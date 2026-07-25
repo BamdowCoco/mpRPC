@@ -4,6 +4,17 @@
 #include <fstream>
 #include <iostream>
 #include <cstdlib>
+#include <sys/stat.h>
+#include <unistd.h>
+
+// 读取当前进程名，用于日志文件命名（如 callee、caller）
+static std::string getProcName()
+{
+    std::ifstream comm("/proc/self/comm");
+    std::string name;
+    std::getline(comm, name);
+    return name;
+}
 
 std::string Logger::levelToString(Level level)
 {
@@ -11,7 +22,7 @@ std::string Logger::levelToString(Level level)
         "INFO", "ERROR"
     };
     int idx = static_cast<int>(level);
-    if(idx<0 || idx>static_cast<int>(std::size(names))) {
+    if(idx<0 || idx>=static_cast<int>(std::size(names))) {
         return "UNKNOWN";
     }
     return std::string(names[idx]);
@@ -22,41 +33,48 @@ Logger::Logger()
     m_logLevel = INFO;
     // 启动写日志线程
     std::thread writeLogTask([this]() {
-        while (true) {
-            // 获取当前日期 从队列取日志 写入相应的日志文件中
-            // 2026-6-12.log
+        // 确保 logs/ 目录存在
+        mkdir("logs", 0755);
 
+        // 程序名用于日志文件命名（如 callee、caller）
+        std::string procName = getProcName();
+
+        while (true) {
             // 转换为tm结构体
             std::time_t now = time(nullptr);
             std::tm now_tm;
             localtime_r(&now, &now_tm);
 
-            char filePath[128];
-            snprintf(filePath, sizeof(filePath), "%d-%d-%d.log", now_tm.tm_year + 1900, now_tm.tm_mon + 1, now_tm.tm_mday);
+            char filePath[160];
+            snprintf(filePath, sizeof(filePath),
+                     "logs/%d-%d-%d_%s.log",
+                     now_tm.tm_year + 1900,
+                     now_tm.tm_mon + 1,
+                     now_tm.tm_mday,
+                     procName.c_str());
 
-            char timeBuf[16]; // 2+1+2+1+2 = 8
-            snprintf(timeBuf, sizeof(timeBuf), "%02d:%02d:%02d", now_tm.tm_hour, now_tm.tm_min, now_tm.tm_sec);
+            char timeBuf[16];
+            snprintf(timeBuf, sizeof(timeBuf), "%02d:%02d:%02d",
+                     now_tm.tm_hour, now_tm.tm_min, now_tm.tm_sec);
 
-            // 以末尾追加的模式 打开文件
-            std::ofstream file(filePath, std::ios::app);
-            if (!file) {
-                std::cerr << "failed to create file!" << std::endl;
-                exit(EXIT_FAILURE);
-            }
-
-            // 取出当前所有日志
+            // 批量取出当前所有日志
             std::queue<std::string> logs;
             m_lockQue.drain(logs);
 
             if(logs.empty()) {
-                // 当前无日志 等待一下
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                continue;
+            }
+
+            // 以末尾追加的模式 打开文件
+            std::ofstream file(filePath, std::ios::app);
+            if (!file) {
+                std::cerr << "failed to create log file: " << filePath << std::endl;
                 continue;
             }
 
             while(!logs.empty()) {
                 file << '[' << timeBuf << "] "
-                    //  << '[' << levelToString(m_logLevel) << "] "
                      << logs.front() << std::endl;
                 logs.pop();
             }
@@ -66,6 +84,41 @@ Logger::Logger()
     });
     // 分离线程
     writeLogTask.detach();
+}
+
+Logger::~Logger()
+{
+    // 同步 flush 队列中剩余的日志（caller 快速退出时确保日志不丢失）
+    std::time_t now = time(nullptr);
+    std::tm now_tm;
+    localtime_r(&now, &now_tm);
+
+    std::string procName = getProcName();
+    char filePath[160];
+    snprintf(filePath, sizeof(filePath),
+             "logs/%d-%d-%d_%s.log",
+             now_tm.tm_year + 1900,
+             now_tm.tm_mon + 1,
+             now_tm.tm_mday,
+             procName.c_str());
+
+    char timeBuf[16];
+    snprintf(timeBuf, sizeof(timeBuf), "%02d:%02d:%02d",
+             now_tm.tm_hour, now_tm.tm_min, now_tm.tm_sec);
+
+    std::queue<std::string> remaining;
+    m_lockQue.drain(remaining);
+
+    if (!remaining.empty()) {
+        std::ofstream file(filePath, std::ios::app);
+        if (file) {
+            while (!remaining.empty()) {
+                file << '[' << timeBuf << "] "
+                     << remaining.front() << std::endl;
+                remaining.pop();
+            }
+        }
+    }
 }
 
 Logger& Logger::getInstance()
@@ -88,5 +141,4 @@ Logger::Level Logger::getLogLevel()
 void Logger::log(std::string msg)
 {
     m_lockQue.push(msg);
-    LOG(msg);
 }

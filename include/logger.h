@@ -42,6 +42,7 @@ public:
 
 private:
     Logger();
+    ~Logger();
     Logger(const Logger&) = delete;
     Logger(Logger&&) = delete;
 
@@ -59,6 +60,7 @@ private:
                 Logger::levelToString(Logger::level).c_str(), \
                 __FILE__, __LINE__, ##__VA_ARGS__); \
         logger.log(buf); \
+        std::cout << buf << std::endl; \
     } while(0)
 
 #define LOG_INFO(msgformat, ...) LOG_WITH_FILE_LINE(INFO, msgformat, ##__VA_ARGS__)

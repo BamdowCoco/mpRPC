@@ -75,7 +75,7 @@ Logger::Logger()
 
             while(!logs.empty()) {
                 file << '[' << timeBuf << "] "
-                     << logs.front() << std::endl;
+                     << logs.front() << '\n';
                 logs.pop();
             }
 

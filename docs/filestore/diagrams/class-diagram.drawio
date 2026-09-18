@@ -1,0 +1,127 @@
+<mxGraphModel adaptiveColors="auto">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+
+    <mxCell id="title" value="分布式文件存储系统 — 类图" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=20;fontStyle=1;fontColor=#1a1a2e;" vertex="1" parent="1">
+      <mxGeometry x="300" y="8" width="400" height="32" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="cls-caller" value="&lt;b&gt;fs_caller&lt;/b&gt;" style="swimlane;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#E8F5E9;strokeColor=#4CAF50;html=1;" vertex="1" parent="1">
+      <mxGeometry x="400" y="60" width="240" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="cls-caller-methods" value="+ doUpload(filename)&#xa;+ doDownload(filename)&#xa;+ doDelete(filename)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=10;html=1;" vertex="1" parent="cls-caller">
+      <mxGeometry y="26" width="240" height="54" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="cls-channel" value="&lt;b&gt;MprpcChannel&lt;/b&gt;" style="swimlane;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#BBDEFB;strokeColor=#64B5F6;html=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="250" width="240" height="98" as="geometry"/>
+    </mxCell>
+    <mxCell id="cls-channel-attrs" value="- m_useDirectConn : bool&#xa;- m_targetIp : string&#xa;- m_targetPort : uint16_t" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=10;html=1;" vertex="1" parent="cls-channel">
+      <mxGeometry y="26" width="240" height="54" as="geometry"/>
+    </mxCell>
+    <mxCell id="cls-channel-methods" value="+ CallMethod()" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=10;html=1;" vertex="1" parent="cls-channel">
+      <mxGeometry y="80" width="240" height="18" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="cls-metarpc" value="&lt;i&gt;MetaServiceRpc&lt;/i&gt;" style="swimlane;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#F5F5F5;strokeColor=#9E9E9E;html=1;" vertex="1" parent="1">
+      <mxGeometry x="350" y="250" width="210" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="cls-metarpc-methods" value="+ UploadFile()&#xa;+ QueryFile()&#xa;+ DeleteFile()" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=10;html=1;" vertex="1" parent="cls-metarpc">
+      <mxGeometry y="26" width="210" height="54" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="cls-storagerpc" value="&lt;i&gt;StorageServiceRpc&lt;/i&gt;" style="swimlane;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#F5F5F5;strokeColor=#9E9E9E;html=1;" vertex="1" parent="1">
+      <mxGeometry x="620" y="250" width="210" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="cls-storagerpc-methods" value="+ PutChunk()&#xa;+ GetChunk()&#xa;+ DeleteFile()" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=10;html=1;" vertex="1" parent="cls-storagerpc">
+      <mxGeometry y="26" width="210" height="54" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="cls-rpcchannel" value="&lt;i&gt;RpcChannel&lt;/i&gt;" style="swimlane;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#F5F5F5;strokeColor=#9E9E9E;html=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="420" width="220" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="cls-rpcchannel-methods" value="+ CallMethod(...)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=10;html=1;" vertex="1" parent="cls-rpcchannel">
+      <mxGeometry y="26" width="220" height="18" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="cls-meta" value="&lt;b&gt;MetaService&lt;/b&gt;" style="swimlane;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#C8E6C9;strokeColor=#66BB6A;html=1;" vertex="1" parent="1">
+      <mxGeometry x="330" y="410" width="250" height="116" as="geometry"/>
+    </mxCell>
+    <mxCell id="cls-meta-attrs" value="- m_nodes : vector&lt;StorageNode&gt;&#xa;- m_meta : unordered_map&lt;string, FileMeta&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=10;html=1;" vertex="1" parent="cls-meta">
+      <mxGeometry y="26" width="250" height="36" as="geometry"/>
+    </mxCell>
+    <mxCell id="cls-meta-methods" value="+ UploadFile()&#xa;+ QueryFile()&#xa;+ DeleteFile()" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=10;html=1;" vertex="1" parent="cls-meta">
+      <mxGeometry y="62" width="250" height="54" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="cls-storage" value="&lt;b&gt;StorageService&lt;/b&gt;" style="swimlane;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#C8E6C9;strokeColor=#66BB6A;html=1;" vertex="1" parent="1">
+      <mxGeometry x="620" y="410" width="250" height="98" as="geometry"/>
+    </mxCell>
+    <mxCell id="cls-storage-attrs" value="- m_dataDir : string" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=10;html=1;" vertex="1" parent="cls-storage">
+      <mxGeometry y="26" width="250" height="18" as="geometry"/>
+    </mxCell>
+    <mxCell id="cls-storage-methods" value="+ PutChunk()&#xa;+ GetChunk()&#xa;+ DeleteFile()" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=10;html=1;" vertex="1" parent="cls-storage">
+      <mxGeometry y="44" width="250" height="54" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="cls-filemeta" value="&lt;b&gt;FileMeta&lt;/b&gt;&#xa;&lt;i&gt;«struct»&lt;/i&gt;" style="swimlane;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#FFF9C4;strokeColor=#F9A825;html=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="580" width="210" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="cls-filemeta-attrs" value="+ filesize : int64_t&#xa;+ chunk_count : int32_t&#xa;+ chunks : vector&lt;ChunkLocation&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=10;html=1;" vertex="1" parent="cls-filemeta">
+      <mxGeometry y="26" width="210" height="54" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="cls-storagenode" value="&lt;b&gt;StorageNode&lt;/b&gt;&#xa;&lt;i&gt;«struct»&lt;/i&gt;" style="swimlane;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#FFF9C4;strokeColor=#F9A825;html=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="700" width="210" height="62" as="geometry"/>
+    </mxCell>
+    <mxCell id="cls-storagenode-attrs" value="+ ip : string&#xa;+ port : int" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=10;html=1;" vertex="1" parent="cls-storagenode">
+      <mxGeometry y="26" width="210" height="36" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="cls-provider" value="&lt;b&gt;RpcProvider&lt;/b&gt;" style="swimlane;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#BBDEFB;strokeColor=#64B5F6;html=1;" vertex="1" parent="1">
+      <mxGeometry x="400" y="640" width="240" height="62" as="geometry"/>
+    </mxCell>
+    <mxCell id="cls-provider-methods" value="+ notifyService(Service*)&#xa;+ run()" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=10;html=1;" vertex="1" parent="cls-provider">
+      <mxGeometry y="26" width="240" height="36" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="e-inherit-channel" value="继承" style="html=1;endArrow=block;endFill=0;strokeColor=#333333;strokeWidth=1.5;fontSize=8;fontColor=#555555;" edge="1" parent="1" source="cls-channel" target="cls-rpcchannel">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e-inherit-meta" value="继承" style="html=1;endArrow=block;endFill=0;strokeColor=#333333;strokeWidth=1.5;fontSize=8;fontColor=#555555;" edge="1" parent="1" source="cls-meta" target="cls-metarpc">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e-inherit-storage" value="继承" style="html=1;endArrow=block;endFill=0;strokeColor=#333333;strokeWidth=1.5;fontSize=8;fontColor=#555555;" edge="1" parent="1" source="cls-storage" target="cls-storagerpc">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="e-meta-filemeta" value="持有" style="html=1;endArrow=open;dashed=1;strokeColor=#555555;strokeWidth=1.5;fontSize=8;fontColor=#555555;" edge="1" parent="1" source="cls-meta" target="cls-filemeta">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e-meta-node" value="持有" style="html=1;endArrow=open;dashed=1;strokeColor=#555555;strokeWidth=1.5;fontSize=8;fontColor=#555555;" edge="1" parent="1" source="cls-meta" target="cls-storagenode">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e-meta-provider" value="main 中 notifyService" style="html=1;endArrow=open;dashed=1;strokeColor=#555555;strokeWidth=1.5;fontSize=8;fontColor=#555555;" edge="1" parent="1" source="cls-meta" target="cls-provider">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e-storage-provider" value="main 中 notifyService" style="html=1;endArrow=open;dashed=1;strokeColor=#555555;strokeWidth=1.5;fontSize=8;fontColor=#555555;" edge="1" parent="1" source="cls-storage" target="cls-provider">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="e-caller-channel" value="创建" style="html=1;endArrow=open;dashed=1;strokeColor=#555555;strokeWidth=1.5;fontSize=8;fontColor=#555555;" edge="1" parent="1" source="cls-caller" target="cls-channel">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e-caller-metarpc" value="调用 Stub" style="html=1;endArrow=open;dashed=1;strokeColor=#555555;strokeWidth=1.5;fontSize=8;fontColor=#555555;" edge="1" parent="1" source="cls-caller" target="cls-metarpc">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e-caller-storagerpc" value="直连 Stub" style="html=1;endArrow=open;dashed=1;strokeColor=#555555;strokeWidth=1.5;fontSize=8;fontColor=#555555;" edge="1" parent="1" source="cls-caller" target="cls-storagerpc">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="legend-note" value="实线空心三角 = 继承；虚线开放箭头 = 依赖/调用" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=10;fontColor=#555555;" vertex="1" parent="1">
+      <mxGeometry x="40" y="800" width="800" height="20" as="geometry"/>
+    </mxCell>
+
+  </root>
+</mxGraphModel>

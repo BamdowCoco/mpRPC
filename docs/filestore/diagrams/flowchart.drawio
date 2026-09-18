@@ -1,0 +1,101 @@
+<mxGraphModel adaptiveColors="auto">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+
+    <mxCell id="title" value="分布式文件存储系统 — 文件生命周期流程图" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=20;fontStyle=1;fontColor=#1a1a2e;" vertex="1" parent="1">
+      <mxGeometry x="250" y="8" width="600" height="32" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="lane-upload" value="上传 upload" style="swimlane;horizontal=0;startSize=110;fillColor=#E8F5E9;strokeColor=#4CAF50;fontStyle=1;fontColor=#2E7D32;html=1;" vertex="1" parent="1">
+      <mxGeometry x="0" y="52" width="1080" height="150" as="geometry"/>
+    </mxCell>
+    <mxCell id="n-u0" value="读本地文件" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#66BB6A;fontSize=11;" vertex="1" parent="lane-upload">
+      <mxGeometry x="130" y="45" width="140" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="n-u1" value="按 1024B 分块" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#66BB6A;fontSize=11;" vertex="1" parent="lane-upload">
+      <mxGeometry x="310" y="45" width="140" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="n-u2" value="UploadFile&#xa;登记元数据（拿分配方案）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#66BB6A;fontSize=10;" vertex="1" parent="lane-upload">
+      <mxGeometry x="490" y="40" width="160" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="n-u3" value="逐块 PutChunk&#xa;直连存储节点" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#66BB6A;fontSize=10;" vertex="1" parent="lane-upload">
+      <mxGeometry x="690" y="40" width="160" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="n-u4" value="上传完成" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#66BB6A;fontSize=11;fontStyle=1;" vertex="1" parent="lane-upload">
+      <mxGeometry x="890" y="45" width="140" height="60" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="lane-download" value="下载 download" style="swimlane;horizontal=0;startSize=110;fillColor=#E3F2FD;strokeColor=#2196F3;fontStyle=1;fontColor=#1565C0;html=1;" vertex="1" parent="1">
+      <mxGeometry x="0" y="212" width="1080" height="150" as="geometry"/>
+    </mxCell>
+    <mxCell id="n-d0" value="QueryFile&#xa;查块位置" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64B5F6;fontSize=10;" vertex="1" parent="lane-download">
+      <mxGeometry x="130" y="45" width="140" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="n-d1" value="逐块 GetChunk&#xa;直连存储节点" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64B5F6;fontSize=10;" vertex="1" parent="lane-download">
+      <mxGeometry x="310" y="45" width="160" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="n-d2" value="拼接写回&#xa;downloads/" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64B5F6;fontSize=10;" vertex="1" parent="lane-download">
+      <mxGeometry x="510" y="45" width="140" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="n-d3" value="下载完成" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#64B5F6;fontSize=11;fontStyle=1;" vertex="1" parent="lane-download">
+      <mxGeometry x="690" y="45" width="140" height="60" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="lane-delete" value="删除 delete" style="swimlane;horizontal=0;startSize=110;fillColor=#FFF3E0;strokeColor=#FF9800;fontStyle=1;fontColor=#E65100;html=1;" vertex="1" parent="1">
+      <mxGeometry x="0" y="372" width="1080" height="150" as="geometry"/>
+    </mxCell>
+    <mxCell id="n-e0" value="QueryFile&#xa;查块位置" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#FFB74D;fontSize=10;" vertex="1" parent="lane-delete">
+      <mxGeometry x="130" y="45" width="140" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="n-e1" value="去重收集&#xa;存储节点" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#FFB74D;fontSize=10;" vertex="1" parent="lane-delete">
+      <mxGeometry x="310" y="45" width="140" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="n-e2" value="逐节点&#xa;DeleteFile" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#FFB74D;fontSize=10;" vertex="1" parent="lane-delete">
+      <mxGeometry x="490" y="45" width="140" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="n-e3" value="元数据 DeleteFile&#xa;删索引" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#FFB74D;fontSize=10;" vertex="1" parent="lane-delete">
+      <mxGeometry x="670" y="45" width="160" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="n-e4" value="删除完成" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE0B2;strokeColor=#FFB74D;fontSize=11;fontStyle=1;" vertex="1" parent="lane-delete">
+      <mxGeometry x="870" y="45" width="140" height="60" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="e-u0" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#333333;strokeWidth=1.5;" edge="1" parent="1" source="n-u0" target="n-u1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e-u1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#333333;strokeWidth=1.5;" edge="1" parent="1" source="n-u1" target="n-u2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e-u2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#333333;strokeWidth=1.5;" edge="1" parent="1" source="n-u2" target="n-u3">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e-u3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#333333;strokeWidth=1.5;" edge="1" parent="1" source="n-u3" target="n-u4">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="e-d0" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#333333;strokeWidth=1.5;" edge="1" parent="1" source="n-d0" target="n-d1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e-d1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#333333;strokeWidth=1.5;" edge="1" parent="1" source="n-d1" target="n-d2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e-d2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#333333;strokeWidth=1.5;" edge="1" parent="1" source="n-d2" target="n-d3">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="e-e0" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#333333;strokeWidth=1.5;" edge="1" parent="1" source="n-e0" target="n-e1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e-e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#333333;strokeWidth=1.5;" edge="1" parent="1" source="n-e1" target="n-e2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e-e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#333333;strokeWidth=1.5;" edge="1" parent="1" source="n-e2" target="n-e3">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e-e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#333333;strokeWidth=1.5;" edge="1" parent="1" source="n-e3" target="n-e4">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+  </root>
+</mxGraphModel>

@@ -10,7 +10,7 @@
 - **数据可靠性问题**：元数据存内存、上传/删除无一致性保证、失败不可感知等，会导致重启丢数据或数据混乱；
 - **功能缺陷**：同名文件无法区分、路径穿越漏洞、并发数据竞争等。
 
-本文档梳理出 12 个问题（P1~P12），其中 P1~P10 已**落地完成**，P11~P12 为待定增强项。
+本文档梳理出 16 个问题（P1~P16），其中 P1~P10 已**落地完成**，P11~P16 为待定增强项。
 
 ## 2. 问题总览
 
@@ -28,6 +28,10 @@
 | P10 | `CHUNK_SIZE` 分散定义于两处，易漂移 | 低 | 统一定义到共享头文件 | ✅ 已完成 |
 | P11 | 存储节点列表静态配置，扩容需重启 | 低 | 节点动态注册/心跳 | ❌ 未做 |
 | P12 | 无鉴权，任意客户端可操作任意文件 | 中 | 增加用户身份校验 | ❌ 未做 |
+| P13 | 删除需遍历 chunk 去重节点；file_chunk 每块重复存 ip/port | 中 | 新增 GetFileNodes 接口 + storage_node 表去重 | ❌ 未做 |
+| P14 | 客户端无本地状态，重复上传需全量重传 | 中 | 本地 JSON 记录已上传文件，秒传/去重 | ❌ 未做 |
+| P15 | 取模分配在节点增删时全量重映射 | 低 | 一致性哈希（虚拟节点环） | ❌ 未做 |
+| P16 | 每块新建连接、固定偏移写产生碎片/空洞 | 中 | 单次上传内长连接复用 + 批量聚合 + 紧凑存储 | ❌ 未做 |
 
 ## 3. 核心方案设计（P1~P6）
 
@@ -194,7 +198,7 @@ service MetaServiceRpc {
 
 > **事务边界说明**：MySQL 事务只保证元数据侧（`file_meta` + `file_chunk` 两表）的一致性；「块已写入存储节点」属跨系统操作，无法被数据库事务回滚，故仍需 `CancelUpload`/GC 等**补偿逻辑**清理已落盘的块。
 
-## 4. 其他已知问题与建议方案（P7~P12）
+## 4. 其他已知问题与建议方案（P7~P16）
 
 - **P7 块校验和**：在 `ChunkLocation` 或 `FileMeta` 中记录每块 MD5/SHA256，下载后比对，检测块损坏/被篡改；存储端 `PutChunk` 计算并返回校验和。
 - **P8 大文件流式**：`fs_caller` 当前用 `std::string` 一次性读入/拼接整个文件。改为按 `CHUNK_SIZE` 流式读写（上传边读边发、下载边收边写），避免大文件 OOM。
@@ -202,6 +206,113 @@ service MetaServiceRpc {
 - **P10 CHUNK_SIZE 统一定义**：`CHUNK_SIZE=1024` 目前分别定义在 `fs_caller.cc` 与 `storage_service.cc`，应下沉到共享头文件或 proto，防止两端漂移。
 - **P11 节点动态扩缩容**：存储节点列表从静态配置改为节点主动注册 + 心跳，元数据动态维护节点集合，扩容无需重启。
 - **P12 鉴权**：上传/下载/删除前校验客户端身份（token/账号体系），防止未授权访问与删库。
+
+### 第二轮优化方案（P13~P16）
+
+> 在 P1~P10 落地后，针对**性能与可扩展性**提出的第二轮优化，目前仅做方案设计，代码尚未落地。
+
+#### P13 删除流程优化 + 存储节点表去重
+
+**现状**：删除时客户端先 `QueryFile` 拿到**逐块**位置（N 块 = N 条 ip/port），再用 `std::set` 去重出涉及节点，逐个节点 `DeleteFile`（`filestore/caller/fs_caller.cc` 的 `doDelete`）。而一个存储节点上、一个文件只对应一个数据文件（`data_dir/<filename>`），客户端去重是多余开销；同时 `file_chunk` 表每个块都重复存一份 `ip VARCHAR(64) + port INT`，N 块就冗余 N 份。
+
+**方案 A —— 新增节点查询接口**：元数据服务新增 `GetFileNodes(filename)`，在数据库侧直接去重返回「该文件落在哪些节点」，删除流程简化为 `GetFileNodes → 逐节点 DeleteFile → 元数据 DeleteFile`，客户端不再遍历 chunks 去重。
+
+```sql
+-- GetFileNodes 查询（方案 B 落地前）
+SELECT DISTINCT ip, port FROM file_chunk WHERE filename = ?;
+```
+
+**方案 B —— 新增存储节点表消除冗余**：把节点地址从 `file_chunk` 抽到独立表，`file_chunk` 只存 `node_id` 外键。
+
+```sql
+CREATE TABLE IF NOT EXISTS storage_node (
+    node_id INT PRIMARY KEY AUTO_INCREMENT,
+    ip      VARCHAR(64) NOT NULL,
+    port    INT         NOT NULL,
+    UNIQUE KEY uk_ip_port (ip, port)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS file_chunk (
+    filename    VARCHAR(255) NOT NULL,
+    chunk_index INT          NOT NULL,
+    node_id     INT          NOT NULL,
+    checksum    VARCHAR(32)  NOT NULL DEFAULT '',
+    PRIMARY KEY (filename, chunk_index)
+) ENGINE=InnoDB;
+```
+
+- 收益：每块用 4 字节 `node_id` 替代约 70 字节的 `ip + port`，冗余大幅下降；节点地址变更只改 `storage_node` 一行。
+- 迁移：启动时把现有 `file_chunk` 的 `(ip, port)` 去重插入 `storage_node`，再回填 `node_id`（幂等、一次性）。
+- 受影响 RPC/SQL：`UploadFile`（查重 + 插入）、`QueryFile`（JOIN 出 ip/port）、`CommitUpload`（更新 checksum）、`GetFileNodes`（新增）、`DeleteFile`（删除）。
+
+**proto 变更**：
+
+```proto
+message StorageNode { string ip = 1; int32 port = 2; }
+
+message GetFileNodesRequest  { string filename = 1; }
+message GetFileNodesResponse {
+    ResultCode result = 1;
+    repeated StorageNode nodes = 2;   // 去重后的存储节点列表
+}
+
+service MetaServiceRpc {
+    // ... 原有 rpc 不变
+    rpc GetFileNodes(GetFileNodesRequest) returns(GetFileNodesResponse);
+}
+```
+
+#### P14 客户端持久化存储（秒传/去重）
+
+**现状**：客户端 `fs_caller` 无任何本地状态，同名文件每次上传都全量重读、重传（即使远端已有）。
+
+**方案**：客户端维护本地 JSON 记录（用 `thirdparty/json.hpp`，nlohmann json 单头文件，仓库已有），记录 `filename → {filesize, chunk_count}`（可扩展记录每块 checksum）。
+
+```json
+{
+  "a.txt": { "filesize": 1048576, "chunk_count": 1024 },
+  "b.txt": { "filesize": 512, "chunk_count": 1 }
+}
+```
+
+- 上传前：本地命中同名且 `filesize/chunk_count` 一致 → 调 `QueryFile` 确认远端已 COMPLETE → 跳过上传（秒传）；
+- 上传成功后写入、删除成功后移除该记录；
+- **边界**：本地 JSON 只是客户端缓存，权威元数据仍在 MySQL；两者不一致时以 `QueryFile` 为准。断点续传（记录已传块号、失败后跳过）列为后续增强。
+
+#### P15 块分配策略：一致性哈希
+
+**现状缺陷**：`m_nodes[chunk_index % m_nodes.size()]` 取模分配（`filestore/callee/meta_service.cc` 的 `UploadFile`）。「奇偶」只是 N=2 的特例；一旦节点数变化（增删节点），几乎**所有块都会重映射**到不同节点，需要全量迁移。
+
+**方案**：改为一致性哈希环 + 虚拟节点。
+
+- 为每个物理节点生成 K 个虚拟节点（如 K=150），`hash("ip:port#k")` 落到 `[0, 2^32)` 的环上；
+- 块分配：`hash(filename + chunk_index)` 落环，顺时针找到下一个虚拟节点，映射到其物理节点；
+- 节点增删时，只有环上相邻区间的块（约 1/N）需要重映射，迁移量最小化。
+
+**实现要点**：
+
+- 环结构：`std::map<uint32_t, nodeId> ring` + `upper_bound` 二分查找顺时针后继；
+- 哈希函数：建议复用 `md5Hex()` 取前 4 字节（`filestore/common/common.h` 已有），避免 `std::hash` 跨平台/进程不一致导致环不稳定；
+- 元数据服务启动时按 `storage_nodes` 配置构建环，`UploadFile` 分配块时改用一致性哈希。
+
+**两点关联**：① 一致性哈希会让一个文件在**单个节点上的块号变得稀疏**，必须配合 P16 的紧凑存储，否则固定偏移写会产生大量空洞；② 一致性哈希顺带解决了 P11「扩缩容需重启」的分配侧问题（节点的动态注册/心跳仍需另做）。
+
+#### P16 上传流程优化（长连接复用 + 批量聚合 + 紧凑存储）
+
+**子问题 A —— 连接开销大**：`putChunkWithRetry/getChunkWithRetry` 每块都新建一个 `MprpcChannel(ip, port)`（一条 TCP 连接），传完即析构关闭，N 块 = N 次 connect/close，握手与 RTT 开销大。
+
+**方案 A**：客户端在单次上传内按「目标节点」对块分组，同一节点的多块复用一条 `MprpcChannel`（一条连接）顺序发送；重试粒度仍为单块。进一步可新增 `PutChunksBatch` RPC，一次请求携带同节点的多块，减少往返次数。
+
+**子问题 B —— 固定偏移写产生碎片/空洞**：存储端 `offset = chunk_index * CHUNK_SIZE` 固定偏移写（`filestore/callee/storage_service.cc` 的 `PutChunk/GetChunk`）。当块号稀疏（P15 一致性哈希后，同一节点上某文件只落部分块）或最后一块不满时，数据文件里会出现空洞与内部碎片。
+
+**方案 B**：存储端改为**顺序紧凑追加**写，元数据记录每块的 `(offset, size)`：
+
+- `file_chunk` 增加 `offset BIGINT`、`size INT` 两列；
+- `PutChunk` 追加写数据文件并返回本块 `(offset, size)`；
+- `CommitUpload` 把每块 `(offset, size)` 登记到 `file_chunk`；
+- `GetChunk` 改为按记录的 `(offset, size)` 读取，而非 `chunk_index * CHUNK_SIZE`。
+
+> P16B 是 P15 一致性哈希的**必要配套**：不做紧凑存储，哈希分配带来的稀疏块号会把每个数据文件打出大量空洞，空间浪费远超收益。
 
 ## 5. 代码改动点清单
 
@@ -216,6 +327,15 @@ service MetaServiceRpc {
 | `config/filestore_meta.cnf` | 新增 `[mysql]` 段（连接参数 + 连接池参数） |
 | `filestore/CMakeLists.txt` | `meta_callee` 增加 database 源文件与 `-lmysqlclient` 链接 |
 
+**P13~P16 待实现改动点（仅方案，尚未落地）：**
+
+| 文件 | 改动（P13~P16） |
+|------|------|
+| `filestore/proto/file_storage.proto` | 新增 `StorageNode`、`GetFileNodes` 消息与 RPC；`PutChunkResponse` 增加 `offset/size`；可选 `PutChunksBatch` |
+| `filestore/callee/meta_service.cc` | 新增 `storage_node` 表与迁移；`file_chunk` 改 `node_id`/`offset`/`size`；新增 `GetFileNodes`；`UploadFile` 改用一致性哈希分配；`QueryFile` JOIN 出 ip/port/offset/size |
+| `filestore/callee/storage_service.cc` | `PutChunk` 改为紧凑追加写并返回 `(offset, size)`；`GetChunk` 按 `(offset, size)` 读 |
+| `filestore/caller/fs_caller.cc` | 单次上传内按节点分组复用连接（+ 可选批量聚合）；本地 JSON 记录（`thirdparty/json.hpp`）实现秒传；`doDelete` 改用 `GetFileNodes` |
+
 ## 6. 验证方式
 
 1. **构建**：`./autobuild.sh` 编译通过，`meta_callee` 正确链接 `libmysqlclient`。
@@ -225,3 +345,11 @@ service MetaServiceRpc {
 5. **路径穿越**：以 `../../etc/passwd` 为文件名调用，存储端拒绝写入。
 6. **失败感知**：停掉元数据服务后再调用客户端，客户端打印 `controller.ErrorText()` 而非崩溃或误判成功。
 7. **并发**：多客户端并发上传不同文件，无崩溃、索引完整。
+
+**P13~P16 待验证项（方案落地后）：**
+
+8. **删除去重**：`GetFileNodes` 返回去重后的节点列表，删除不再遍历 chunks；`storage_node` 表落地后 `file_chunk` 无重复 ip/port。
+9. **秒传**：本地 JSON 命中同名文件且远端已 COMPLETE 时，客户端跳过上传，无第二次全量重传。
+10. **一致性哈希**：增删一个存储节点后，仅约 1/N 的块重映射（而非取模的全量重映射）。
+11. **紧凑存储**：稀疏块号（哈希分配）下数据文件无空洞，`offset/size` 与 `GetChunk` 读取一致。
+12. **连接复用**：单次上传发往同一节点的多块共用一条 TCP 连接，连接建立次数由 N 降为节点数。

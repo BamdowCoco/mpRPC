@@ -1,0 +1,115 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/25.0.2 Chrome/128.0.6613.186 Electron/32.2.5 Safari/537.36" version="25.0.2">
+  <diagram id="ktfEuCOs9fTq0ms41KcF" name="第 1 页">
+    <mxGraphModel dx="994" dy="676" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="分布式文件存储系统 — 文件生命周期流程图" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=20;fontStyle=1;fontColor=#1a1a2e;" parent="1" vertex="1">
+          <mxGeometry x="250" y="8" width="600" height="32" as="geometry" />
+        </mxCell>
+        <mxCell id="lane-upload" value="上传 upload" style="swimlane;horizontal=0;startSize=110;fillColor=#E8F5E9;strokeColor=#4CAF50;fontStyle=1;fontColor=#2E7D32;html=1;" parent="1" vertex="1">
+          <mxGeometry y="52" width="1120" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="n-u0" value="读本地文件&#xa;(流式 ifstream)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#66BB6A;fontSize=11;" parent="lane-upload" vertex="1">
+          <mxGeometry x="130" y="45" width="130" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="n-u1" value="按 1024B 分块" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#66BB6A;fontSize=11;" parent="lane-upload" vertex="1">
+          <mxGeometry x="290" y="45" width="130" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="n-u2" value="UploadFile&#xa;登记 PENDING + 查重" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#66BB6A;fontSize=11;" parent="lane-upload" vertex="1">
+          <mxGeometry x="450" y="40" width="160" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="n-u3" value="逐块 PutChunk&#xa;直连 + 重试 3 次&#xa;返回 checksum" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#66BB6A;fontSize=11;" parent="lane-upload" vertex="1">
+          <mxGeometry x="640" y="40" width="170" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="n-u4" value="CommitUpload&#xa;PENDING→COMPLETE&#xa;登记 checksum" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#66BB6A;fontSize=11;" parent="lane-upload" vertex="1">
+          <mxGeometry x="840" y="40" width="160" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="n-u5" value="上传完成" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#66BB6A;fontSize=11;fontStyle=1;" parent="lane-upload" vertex="1">
+          <mxGeometry x="1030" y="45" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="n-u-fail" value="回滚：CancelUpload&#xa;+ 删已传块" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCDD2;strokeColor=#E57373;fontSize=11;fontColor=#C62828;" parent="lane-upload" vertex="1">
+          <mxGeometry x="650" y="135" width="180" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="lane-download" value="下载 download" style="swimlane;horizontal=0;startSize=110;fillColor=#E3F2FD;strokeColor=#2196F3;fontStyle=1;fontColor=#1565C0;html=1;" parent="1" vertex="1">
+          <mxGeometry y="262" width="1120" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="n-d0" value="QueryFile&#xa;查块位置 + checksum" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64B5F6;fontSize=11;" parent="lane-download" vertex="1">
+          <mxGeometry x="130" y="45" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="n-d1" value="逐块 GetChunk&#xa;直连 + 重试" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64B5F6;fontSize=11;" parent="lane-download" vertex="1">
+          <mxGeometry x="320" y="45" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="n-d2" value="MD5 校验" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64B5F6;fontSize=11;" parent="lane-download" vertex="1">
+          <mxGeometry x="510" y="45" width="130" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="n-d3" value="流式写回&#xa;downloads/" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64B5F6;fontSize=11;" parent="lane-download" vertex="1">
+          <mxGeometry x="670" y="45" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="n-d4" value="下载完成" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#64B5F6;fontSize=11;fontStyle=1;" parent="lane-download" vertex="1">
+          <mxGeometry x="840" y="45" width="130" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="lane-delete" value="删除 delete" style="swimlane;horizontal=0;startSize=110;fillColor=#FFF3E0;strokeColor=#FF9800;fontStyle=1;fontColor=#E65100;html=1;" parent="1" vertex="1">
+          <mxGeometry y="422" width="1120" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="n-e0" value="QueryFile&#xa;查块位置" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#FFB74D;fontSize=11;" parent="lane-delete" vertex="1">
+          <mxGeometry x="130" y="45" width="130" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="n-e1" value="去重收集&#xa;存储节点" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#FFB74D;fontSize=11;" parent="lane-delete" vertex="1">
+          <mxGeometry x="290" y="45" width="130" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="n-e2" value="逐节点 DeleteFile&#xa;(重试 3 次)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#FFB74D;fontSize=11;" parent="lane-delete" vertex="1">
+          <mxGeometry x="450" y="45" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="n-e3" value="元数据 DeleteFile&#xa;事务删索引" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#FFB74D;fontSize=11;" parent="lane-delete" vertex="1">
+          <mxGeometry x="630" y="45" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="n-e4" value="删除完成" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE0B2;strokeColor=#FFB74D;fontSize=11;fontStyle=1;" parent="lane-delete" vertex="1">
+          <mxGeometry x="820" y="45" width="130" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="e-u0" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#333333;strokeWidth=1.5;" parent="1" source="n-u0" target="n-u1" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-u1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#333333;strokeWidth=1.5;" parent="1" source="n-u1" target="n-u2" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-u2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#333333;strokeWidth=1.5;" parent="1" source="n-u2" target="n-u3" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-u3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#333333;strokeWidth=1.5;" parent="1" source="n-u3" target="n-u4" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-u4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#333333;strokeWidth=1.5;" parent="1" source="n-u4" target="n-u5" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-u-fail" value="任一块失败" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#E57373;strokeWidth=1.5;dashed=1;fontSize=10;fontColor=#C62828;" parent="1" source="n-u3" target="n-u-fail" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-d0" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#333333;strokeWidth=1.5;" parent="1" source="n-d0" target="n-d1" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-d1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#333333;strokeWidth=1.5;" parent="1" source="n-d1" target="n-d2" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-d2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#333333;strokeWidth=1.5;" parent="1" source="n-d2" target="n-d3" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-d3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#333333;strokeWidth=1.5;" parent="1" source="n-d3" target="n-d4" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-e0" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#333333;strokeWidth=1.5;" parent="1" source="n-e0" target="n-e1" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#333333;strokeWidth=1.5;" parent="1" source="n-e1" target="n-e2" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#333333;strokeWidth=1.5;" parent="1" source="n-e2" target="n-e3" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#333333;strokeWidth=1.5;" parent="1" source="n-e3" target="n-e4" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
